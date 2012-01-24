@@ -1,0 +1,10 @@
+1. Get the list of food
+2. Calculate enemy times to each food (BFS)
+3. Eliminate food that we can't beat the enemy to
+4. For each ant
+    a) Calculate the distance to each food (BFS)
+    b) For each direction
+        i) calculate the weight at that point
+            - food is scored at 1 if you can get it this turn
+            - food is scored less for each turn it is further from you
+    c) Move to the point with the highest weight

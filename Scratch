@@ -1,0 +1,36 @@
+for each ant
+    for each direction
+        weigh theft (does this put us in a position to steal without risk?)
+        weigh aggression (does this put us in a position to attack without loss?)
+        weigh food (does this put us closer to food?)
+        combine weights
+    choose the highest weighted direction
+
+weight functions return a value between -1 (holy shit makes it worse) and +1 (goal accomplished), with 0 being no change
+weight combination function scales individual weights and adds
+
+theft
+    - look for situations where we can get to food before entering attack radius of an enemy
+    - the smaller the window, the higher the weight
+
+aggression
+    - weigh heavily against options where we die
+    - weigh heavily towards options where we kill
+    - adjust weight for proximity to enemies
+
+food
+    - weigh by proximity to each food, adjusted down by distance
+
+
+A position has scores for:
+    - Defensibility [-1 to +n]
+        * Positive if our movement gains kills
+        * -1 for certain death
+        * More negative the more we require reinforcements
+    
+Things a move can do:
+    - death adjust (-1 or 0)
+    - cause other ants to die (0 to +n)
+    - bring us closer to friendly ants (±?)
+    - bring us closer to enemy hill (0 to +1)
+    - defend our own hill (-1 to +1)
