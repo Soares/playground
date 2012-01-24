@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+import os, sys, re
+from random import randint
+re_ability = re.compile(r'\s*(\d+)(?:\+(\d+))?\s+([\w ]+)(?:\s*\[([\w ]+)\])?(\s+\(\d+\))?')
+re_specialty = re.compile(r'\s*(\d+)B(?:\+(\d+))?\s+([\w ]+)')
+
+abilities = {}
+specialties = {}
+
+character = '/home/nate/RPGs/A Song of Ham and Flanders/Characters/Willem Strongwind'
+
+# Grab the file
+input = open(character)
+
+# Get to where the abilities begin
+for line in input:
+    if line.strip().lower().startswith('abilities'):
+        break
+
+ability = None
+for line in input:
+    # Exit when you get to a blank line
+    if not line.strip():
+        break
+    # Match an ability
+    match = re_ability.match(line)
+    if match:
+        score, plus, name, type, real = match.groups()
+        # A language has a special type
+        if type and type.lower() != 'common':
+            name = type
+        ability = name.strip().title()
+        abilities[ability] = (int(score), int(plus or 0))
+        continue
+    # Match a specialty
+    match = re_specialty.match(line)
+    if match:
+        score, plus, name = match.groups()
+        name = name.strip().title()
+        specialties.setdefault(ability, {})
+        specialties[ability][name] = (int(score), int(plus or 0))
+input.close()
+
+def search(skill):
+    if skill in abilities:
+        base = abilities[skill][0]
+        plus = abilities[skill][1]
+        return (skill, None, base, 0, plus)
+    for ability in specialties:
+        group = specialties[ability]
+        if skill in group:
+            base = abilities[ability][0]
+            bonus = group[skill][0]
+            plus = abilities[ability][1] + group[skill][1]
+            return (ability, skill, base, bonus, plus)
+
+def lookup(string):
+    if ',' in string:
+        specialty, skill = string.split(',')
+        skill = skill.strip().title()
+        specialty = specialty.strip().title()
+        if skill not in abilities:
+            return None
+        if specialty not in specialties[skill]:
+            return None
+        plus = abilities[skill][1] + specialties[skill][specialty][1]
+        base = abilities[skill][0]
+        bonus = specialties[skill][specialty][0]
+        return skill, specialty, base, bonus, plus
+    return search(string)
+
+skill = ' '.join(sys.argv[1:]).strip().title()
+
+try:
+    skill, specialty, base, bonus, plus = lookup(skill)
+except TypeError:
+    print "Unrecognized ability"
+    sys.exit(0)
+
+dice = sorted((randint(1, 6) for _ in range(base + bonus)), reverse=True)
+good = ' '.join(map(str, dice[:base]))
+bad = ' '.join(map(str, dice[base:]))
+plustr = ('+%d' % plus) if plus else ''
+if specialty:
+    print '%s (%s): %dd6+%dB%s' % (specialty, skill, base, bonus, plustr)
+    print '%s - %s = %d' % (good, bad, sum(dice[:base]) + plus)
+else:
+    print '%s: %dd6%s' % (skill, base, plustr)
+    print '%s = %d' % (good, sum(dice) + plus)
